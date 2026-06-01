@@ -1,6 +1,6 @@
 # Logiciel de gestion de stock — Garage Renault Léon Olivier
 
-**Workshop Client M2 — MBA Expert UX/UI Design — MyDigitalSchool 2025–2026**
+**Workshop Client M2 — MBA Big Data — MyDigitalSchool 2025–2026**
 
 ## Présentation
 
