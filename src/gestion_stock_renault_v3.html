@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Stock Pièces — Renault</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+:root{--y:#FFCC00;--yd:#e6b800;--bg:#f2f2f0;--panel:#fff;--sidebar:#181818;--sh:#252525;--sa:#2e2e2e;--text:#1a1a1a;--muted:#666;--faint:#aaa;--stxt:#ccc;--bdr:rgba(0,0,0,.1);--bds:rgba(0,0,0,.17);--r:8px;--rl:12px;--gbg:#EAF3DE;--gtx:#3B6D11;--abg:#FAEEDA;--atx:#854F0B;--rbg:#FCEBEB;--rtx:#A32D2D;--bl:#185FA5;--bld:#0C447C}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden}
+.sidebar{width:230px;background:var(--sidebar);display:flex;flex-direction:column;flex-shrink:0;height:100vh}
+.logo-wrap{padding:16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.logo-sq{background:var(--y);color:#111;font-size:11px;font-weight:700;padding:6px 8px;border-radius:5px;flex-shrink:0}
+.logo-txt{color:#fff;font-size:13px;font-weight:600;line-height:1.3}
+.logo-sub{color:rgba(255,255,255,.4);font-size:11px}
+.nav-sec{padding:16px 14px 4px;font-size:10px;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.8px}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 13px;margin:1px 6px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--stxt);transition:background .1s;user-select:none}
+.ni:hover{background:var(--sh);color:#fff}
+.ni.active{background:var(--sa);color:#fff;font-weight:500}
+.ni svg{width:15px;height:15px;flex-shrink:0;opacity:.65}
+.ni.active svg,.ni:hover svg{opacity:1}
+.sb-foot{margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-foot a{color:var(--y);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:5px}
+.sb-foot a:hover{text-decoration:underline}
+.sb-info{color:rgba(255,255,255,.28);font-size:11px;margin-top:6px;line-height:1.5}
+.main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+.topbar{background:var(--panel);border-bottom:1px solid var(--bdr);padding:10px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:700;color:var(--text)}
+.topbar-right{margin-left:auto;display:flex;gap:7px;align-items:center}
+.main{padding:18px 22px;overflow-y:auto;flex:1}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r);font-size:13px;cursor:pointer;border:1px solid var(--bds);background:var(--panel);color:var(--text);font-family:inherit;white-space:nowrap;transition:background .1s}
+.btn:hover{background:var(--bg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-y{background:var(--y);border-color:var(--y);color:#111;font-weight:700}
+.btn-y:hover{background:var(--yd);border-color:var(--yd)}
+.btn-bl{background:var(--bl);border-color:var(--bl);color:#fff}
+.btn-bl:hover{background:var(--bld)}
+.btn-sm{padding:4px 9px;font-size:12px}
+.btn-ic{padding:5px 7px;color:var(--muted)}
+.btn-red{color:var(--rtx)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px}
+.sc{background:var(--panel);border:1px solid var(--bdr);border-radius:var(--rl);padding:14px 15px}
+.sc-lbl{font-size:12px;color:var(--muted);margin-bottom:5px}
+.sc-val{font-size:26px;font-weight:700;line-height:1}
+.sc-sub{font-size:11px;color:var(--faint);margin-top:3px}
+.sc-warn .sc-val{color:var(--atx)}
+.sc-err .sc-val{color:var(--rtx)}
+.alert-bar{background:var(--abg);border:1px solid #FAC775;border-radius:var(--r);padding:8px 13px;font-size:13px;color:var(--atx);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.alert-bar a{color:#633806;font-weight:600}
+.panel{background:var(--panel);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden}
+.toolbar{padding:9px 13px;border-bottom:1px solid var(--bdr);display:flex;gap:7px;flex-wrap:wrap;align-items:center;background:#fafaf9}
+.toolbar input,.toolbar select{font-size:13px;padding:5px 9px;height:31px;border:1px solid var(--bds);border-radius:var(--r);background:var(--panel);color:var(--text);font-family:inherit}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:8px 11px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);background:#fafaf9;border-bottom:1px solid var(--bdr);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--bdr)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#fafaf9}
+td{padding:8px 11px;vertical-align:middle}
+.ref-c{font-family:'Courier New',monospace;font-size:12px;color:var(--muted);white-space:nowrap}
+.nom-c{max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.b-ok{background:var(--gbg);color:var(--gtx)}
+.b-low{background:var(--abg);color:var(--atx)}
+.b-out{background:var(--rbg);color:var(--rtx)}
+.qc{display:inline-flex;align-items:center;gap:4px}
+.qb{width:21px;height:21px;border:1px solid var(--bds);background:#f0f0ee;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-family:inherit;color:var(--text)}
+.qb:hover{background:#e0e0de}
+.qv{min-width:22px;text-align:center;font-weight:700;font-size:13px}
+.act{display:flex;gap:2px}
+.tf{padding:7px 13px;font-size:11px;color:var(--faint);background:#fafaf9;border-top:1px solid var(--bdr)}
+.sec{display:none}
+.sec.on{display:block}
+.csv-banner{background:var(--panel);border:1px solid var(--bdr);border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:13px}
+.cdot{width:8px;height:8px;border-radius:50%;background:var(--gtx);flex-shrink:0}
+.cdot.dirty{background:var(--atx)}
+.ocr-wrap{padding:18px}
+.drop-zone{border:2px dashed var(--bds);border-radius:var(--rl);padding:44px 20px;text-align:center;cursor:pointer;background:#fafaf9;transition:border-color .15s,background .15s}
+.drop-zone:hover,.drop-zone.drag{background:#f0f0ee;border-color:var(--yd)}
+.dz-icon{font-size:38px;margin-bottom:10px}
+.dz-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.dz-sub{color:var(--muted);font-size:13px}
+.prev-row{display:none;gap:16px;align-items:flex-start;margin-top:14px}
+.prev-row img{max-height:170px;max-width:250px;border-radius:var(--r);border:1px solid var(--bdr);object-fit:contain}
+.ocr-info{flex:1}
+.prog-bar{height:5px;background:var(--bdr);border-radius:3px;overflow:hidden;margin:7px 0;display:none}
+.prog-fill{height:100%;background:var(--y);border-radius:3px;transition:width .25s}
+.prog-lbl{font-size:12px;color:var(--muted)}
+.ocr-result{margin-top:14px;display:none}
+.ocr-rh{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--gtx)}
+.ocr-row{display:grid;grid-template-columns:130px 1fr 65px 110px 30px;gap:7px;align-items:end;margin-bottom:7px;padding:9px 10px;background:#fafaf9;border:1px solid var(--bdr);border-radius:var(--r)}
+.ocr-row label{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.ocr-row input,.ocr-row select{width:100%;font-size:12px;padding:4px 7px;height:28px;border:1px solid var(--bds);border-radius:5px;background:var(--panel);color:var(--text);font-family:inherit}
+.raw-det{margin-top:12px}
+.raw-det summary{cursor:pointer;font-size:12px;color:var(--muted);padding:4px 0}
+.raw-det pre{background:#f0f0ee;border-radius:var(--r);padding:9px;font-size:11px;max-height:110px;overflow-y:auto;white-space:pre-wrap;color:var(--muted);margin-top:5px}
+.hist-row{display:flex;align-items:center;gap:9px;padding:8px 13px;border-bottom:1px solid var(--bdr);font-size:13px}
+.hist-row:last-child{border-bottom:none}
+.hdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ht{font-size:11px;color:var(--muted);width:80px;flex-shrink:0}
+.hr{font-family:'Courier New',monospace;font-size:11px;color:var(--muted);width:100px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hd{color:var(--muted);font-size:12px;width:95px;text-align:right;flex-shrink:0}
+.hts{color:var(--faint);font-size:11px;width:115px;text-align:right;flex-shrink:0}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.modal{background:var(--panel);border-radius:var(--rl);padding:20px;width:460px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal h2{font-size:15px;font-weight:700;margin-bottom:14px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.fr{margin-bottom:9px}
+.fr label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px;font-weight:500}
+.fr input,.fr select{width:100%;font-size:13px;padding:7px 9px;border:1px solid var(--bds);border-radius:var(--r);background:var(--panel);color:var(--text);font-family:inherit}
+.fr input:focus,.fr select:focus{outline:2px solid var(--y);outline-offset:-1px}
+.mf{display:flex;gap:7px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr)}
+.sp{background:var(--panel);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;margin-bottom:14px}
+.sp h3{font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--bdr)}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.srow:last-child{border-bottom:none}
+.slbl{font-size:13px}
+.ssub{font-size:11px;color:var(--muted);margin-top:2px}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,.12);border-top-color:#333;border-radius:50%;animation:spin .65s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{padding:42px;text-align:center;color:var(--muted)}
+.empty-ico{font-size:30px;margin-bottom:7px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo-wrap">
+    <div class="logo-sq">◆</div>
+    <div><div class="logo-txt">Stock Pièces</div><div class="logo-sub">Renault Garage</div></div>
+  </div>
+  <div class="nav-sec">Navigation</div>
+  <div class="ni active" onclick="show('stock',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 3H8l-2 4h12z"/></svg>
+    Stock
+  </div>
+  <div class="ni" onclick="show('ocr',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h5M8 11h8M8 15h5"/><polyline points="15 8 17 10 15 12"/></svg>
+    Import facture OCR
+  </div>
+  <div class="ni" onclick="show('history',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    Historique
+  </div>
+  <div class="ni" onclick="show('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Paramètres
+  </div>
+  <div class="sb-foot">
+    <a href="https://rpartstore.renault.com/" target="_blank">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Commander sur Rpartstore
+    </a>
+    <div class="sb-info" id="sb-info">—</div>
+  </div>
+</div>
+
+<div class="main-wrap">
+  <div class="topbar">
+    <span class="topbar-title" id="page-title">Stock</span>
+    <div class="topbar-right">
+      <button class="btn btn-y" onclick="openModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter une pièce
+      </button>
+      <button class="btn" onclick="triggerLoadCSV()" title="Charger un CSV sauvegardé">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        Charger CSV
+      </button>
+      <button class="btn btn-y" onclick="saveCSV()" title="Ctrl+S">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Sauvegarder CSV
+      </button>
+    </div>
+  </div>
+  <div class="main">
+
+    <!-- STOCK -->
+    <div id="sec-stock" class="sec on">
+      <div class="csv-banner">
+        <div class="cdot" id="cdot"></div>
+        <div>
+          <strong>Fichier actif :</strong> <span id="csv-fn">stock_renault.csv</span>
+          &nbsp;·&nbsp; <span id="csv-mod">jamais sauvegardé</span>
+          &nbsp;&nbsp;
+          <span id="dirty-badge" style="display:none;background:var(--abg);color:var(--atx);font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">● Non sauvegardé</span>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div id="alert-zone"></div>
+      <div class="panel">
+        <div class="toolbar">
+          <input type="text" id="q" placeholder="Référence ou désignation…" oninput="renderTable()" style="width:230px">
+          <select id="fcat" onchange="renderTable()" style="width:138px">
+            <option value="">Toutes catégories</option>
+            <option>Freinage</option><option>Filtration</option><option>Allumage</option>
+            <option>Distribution</option><option>Pneumatiques</option><option>Carrosserie</option><option>Autre</option>
+          </select>
+          <select id="fst" onchange="renderTable()" style="width:128px">
+            <option value="">Tous états</option>
+            <option value="ok">En stock</option>
+            <option value="low">Stock faible</option>
+            <option value="out">Rupture</option>
+          </select>
+          <button class="btn btn-sm" onclick="clearFilters()">Réinitialiser</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:120px">Référence</th>
+            <th>Désignation</th>
+            <th style="width:102px">Catégorie</th>
+            <th style="width:98px">Quantité</th>
+            <th style="width:62px">Seuil</th>
+            <th style="width:80px">Prix HT</th>
+            <th style="width:72px">Emplac.</th>
+            <th style="width:82px">État</th>
+            <th style="width:88px">Actions</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="tf" id="tf"></div>
+      </div>
+    </div>
+
+    <!-- OCR -->
+    <div id="sec-ocr" class="sec">
+      <div class="panel">
+        <div style="padding:12px 15px;border-bottom:1px solid var(--bdr);background:#fafaf9;display:flex;align-items:center;gap:8px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h5M8 11h8M8 15h5"/></svg>
+          <strong style="font-size:13px">Reconnaissance de facture Renault (OCR)</strong>
+          <span style="font-size:12px;color:var(--muted)">— 100% local, aucune donnée envoyée</span>
+        </div>
+        <div class="ocr-wrap">
+          <div class="drop-zone" id="dz" onclick="document.getElementById('fi').click()" ondragover="doDrag(event,1)" ondragleave="doDrag(event,0)" ondrop="doDrop(event)">
+            <div class="dz-icon">📄</div>
+            <div class="dz-title">Glissez une photo de facture ici</div>
+            <div class="dz-sub">ou cliquez — JPG, PNG, BMP</div>
+            <div style="margin-top:10px;font-size:12px;color:var(--faint)">
+              Entités ciblées : <strong style="color:var(--muted)">Désignation</strong> · <strong style="color:var(--muted)">Référence</strong> · <strong style="color:var(--muted)">Quantité</strong> · <strong style="color:var(--muted)">Prix Unitaire HT</strong>
+            </div>
+          </div>
+          <input type="file" id="fi" accept="image/*" style="display:none" onchange="loadOCRFile(event)">
+          <div class="prev-row" id="prev-row">
+            <img id="prev-img" src="" alt="Aperçu">
+            <div class="ocr-info">
+              <div id="ocr-fname" style="font-weight:600;font-size:13px;margin-bottom:8px"></div>
+              <div class="prog-bar" id="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+              <div class="prog-lbl" id="prog-lbl"></div>
+              <div style="display:flex;gap:7px;margin-top:10px">
+                <button class="btn btn-bl" id="ocr-btn" onclick="runOCR()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Analyser la facture
+                </button>
+                <button class="btn btn-sm" onclick="resetOCR()">Annuler</button>
+              </div>
+            </div>
+          </div>
+          <div class="ocr-result" id="ocr-result">
+            <div class="ocr-rh" id="ocr-rh"></div>
+            <div id="ocr-list"></div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-y" onclick="importOCR()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Importer dans le stock
+              </button>
+              <button class="btn" onclick="resetOCR()">Annuler</button>
+            </div>
+          </div>
+          <details class="raw-det" id="raw-det" style="display:none">
+            <summary>Voir le texte brut extrait par OCR</summary>
+            <pre id="raw-txt"></pre>
+          </details>
+        </div>
+      </div>
+      <div style="margin-top:12px;background:var(--panel);border:1px solid var(--bdr);border-radius:var(--rl);padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.8">
+        <strong style="color:var(--text)">Format reconnu</strong> — Facture Renault standard :<br>
+        La colonne <strong style="color:var(--text)">Désignation</strong> (gauche), <strong style="color:var(--text)">Référence</strong>, <strong style="color:var(--text)">Temps/Quantité</strong>, <strong style="color:var(--text)">Prix Unitaire HT</strong>.<br>
+        Photo nette + document à plat = meilleurs résultats. Tous les champs sont corrigeables avant import.
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="sec-history" class="sec">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:13px;color:var(--muted)" id="hist-count"></span>
+        <div style="display:flex;gap:7px">
+          <button class="btn btn-sm" onclick="exportHistCSV()">Export CSV</button>
+          <button class="btn btn-sm btn-red" onclick="clearHistory()">Effacer</button>
+        </div>
+      </div>
+      <div class="panel"><div id="hist-list"></div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="sec-settings" class="sec">
+      <div class="sp">
+        <h3>Fichier CSV</h3>
+        <div class="srow"><div><div class="slbl">Télécharger le stock (CSV)</div><div class="ssub">Compatible Excel, LibreOffice — Ctrl+S</div></div><button class="btn btn-sm" onclick="saveCSV()">Télécharger</button></div>
+        <div class="srow"><div><div class="slbl">Charger un fichier CSV</div><div class="ssub">Reprendre un stock sauvegardé</div></div><button class="btn btn-sm" onclick="triggerLoadCSV()">Charger</button></div>
+        <div class="srow"><div><div class="slbl">Exporter l'historique (CSV)</div><div class="ssub">Tous les mouvements horodatés</div></div><button class="btn btn-sm" onclick="exportHistCSV()">Exporter</button></div>
+      </div>
+      <div class="sp">
+        <h3>Données</h3>
+        <div class="srow"><div><div class="slbl">Réinitialiser tout</div><div class="ssub" style="color:var(--rtx)">Supprime stock + historique</div></div><button class="btn btn-sm btn-red" onclick="resetAll()">Réinitialiser</button></div>
+      </div>
+      <div class="sp">
+        <h3>À propos</h3>
+        <div class="srow"><div class="slbl">Version</div><span style="font-size:13px;color:var(--muted)">v3.0 — Indépendant</span></div>
+        <div class="srow"><div class="slbl">Stockage</div><span style="font-size:13px;color:var(--muted)">Fichier CSV + cache navigateur</span></div>
+        <div class="srow"><div class="slbl">OCR</div><span style="font-size:13px;color:var(--muted)">Tesseract.js — local, sans internet</span></div>
+        <div class="srow"><div class="slbl">Références</div><span style="font-size:13px;color:var(--muted)" id="cap-info">—</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mo" id="mo" onclick="closeMoBg(event)">
+  <div class="modal">
+    <h2 id="mo-title">Ajouter une pièce</h2>
+    <div class="fg2">
+      <div class="fr"><label>Référence *</label><input type="text" id="f-ref" placeholder="8200100"></div>
+      <div class="fr"><label>Catégorie</label>
+        <select id="f-cat"><option>Freinage</option><option>Filtration</option><option>Allumage</option><option>Distribution</option><option>Pneumatiques</option><option>Carrosserie</option><option>Autre</option></select>
+      </div>
+    </div>
+    <div class="fr"><label>Désignation *</label><input type="text" id="f-nom" placeholder="Ex : Réalisation du double de la télécommande"></div>
+    <div class="fg2">
+      <div class="fr"><label>Quantité</label><input type="number" id="f-qty" value="0" min="0"></div>
+      <div class="fr"><label>Seuil d'alerte</label><input type="number" id="f-seuil" value="2" min="0"></div>
+    </div>
+    <div class="fg2">
+      <div class="fr"><label>Prix unitaire HT (€)</label><input type="number" id="f-prix" value="" step="0.01" placeholder="89.34"></div>
+      <div class="fr"><label>Emplacement</label><input type="text" id="f-loc" placeholder="Ex : Étagère A3"></div>
+    </div>
+    <div class="mf">
+      <button class="btn" onclick="closeMo()">Annuler</button>
+      <button class="btn btn-y" onclick="saveItem()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="csv-load-input" accept=".csv" style="display:none" onchange="loadCSVFile(event)">
+
+<script>
+const LS_STOCK='rn_stock_v3', LS_HIST='rn_hist_v3', LS_META='rn_meta_v3';
+const CATS=['Freinage','Filtration','Allumage','Distribution','Pneumatiques','Carrosserie','Autre'];
+const CSV_HEADER='Référence,Désignation,Catégorie,Quantité,Seuil,Prix HT,Emplacement';
+let editIdx=null, ocrParsed=[], ocrSrc=null, unsaved=false;
+
+function getMeta(){try{return JSON.parse(localStorage.getItem(LS_META)||'{}')}catch(e){return{}}}
+function setMeta(m){localStorage.setItem(LS_META,JSON.stringify(m))}
+
+function stockToCSV(arr){
+  return [CSV_HEADER,...arr.map(i=>[i.ref,i.nom,i.cat,i.qty,i.seuil,i.prix||'',i.loc||''].map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(','))].join('\r\n');
+}
+function parseLine(line){
+  const res=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++}else inQ=!inQ}else if(c===','&&!inQ){res.push(cur);cur=''}else cur+=c}
+  res.push(cur);return res;
+}
+function csvToStock(csv){
+  const lines=csv.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2)return[];
+  const s=lines[0].toLowerCase().includes('f') ? 1 : 0;
+  return lines.slice(s).map(l=>{const c=parseLine(l);return{ref:(c[0]||'').trim(),nom:(c[1]||'').trim(),cat:(c[2]||'Autre').trim(),qty:parseInt(c[3])||0,seuil:parseInt(c[4])||2,prix:parseFloat(c[5])||0,loc:(c[6]||'').trim()}}).filter(i=>i.ref||i.nom);
+}
+
+function loadStock(){
+  const raw=localStorage.getItem(LS_STOCK);
+  if(raw)try{return csvToStock(raw)}catch(e){}
+  const demo=[
+    {ref:'82 01 461 718',nom:'Plaquettes de frein avant Clio 4',cat:'Freinage',qty:6,seuil:2,prix:28.5,loc:'A1'},
+    {ref:'16 40 600 08R',nom:'Filtre à huile moteur 1.5 dCi',cat:'Filtration',qty:1,seuil:3,prix:8.9,loc:'B2'},
+    {ref:'22 44 069 52R',nom:'Bougie allumage NGK Megane 3',cat:'Allumage',qty:0,seuil:4,prix:4.2,loc:'B5'},
+    {ref:'11 56 105 00Q',nom:'Courroie de distribution Kangoo',cat:'Distribution',qty:3,seuil:1,prix:42.0,loc:'C3'},
+    {ref:'40 06 025 14R',nom:'Disque de frein arrière Kadjar',cat:'Freinage',qty:4,seuil:2,prix:35.0,loc:'A2'},
+    {ref:'8200100',nom:'Télécommande double Megane IV',cat:'Autre',qty:2,seuil:1,prix:89.34,loc:'D2'},
+  ];
+  localStorage.setItem(LS_STOCK,stockToCSV(demo));return demo;
+}
+function loadHist(){try{return JSON.parse(localStorage.getItem(LS_HIST)||'[]')}catch(e){return[]}}
+
+let stock=loadStock(), history=loadHist();
+
+function persist(){localStorage.setItem(LS_STOCK,stockToCSV(stock));markDirty(true);updateSBInfo()}
+function persistHist(){localStorage.setItem(LS_HIST,JSON.stringify(history))}
+function addHist(type,ref,nom,detail){history.unshift({type,ref,nom,detail,ts:Date.now()});if(history.length>500)history=history.slice(0,500);persistHist()}
+
+function markDirty(v){
+  unsaved=v;
+  const b=document.getElementById('dirty-badge');if(b)b.style.display=v?'inline':'none';
+  const d=document.getElementById('cdot');if(d)d.className='cdot'+(v?' dirty':'');
+}
+
+function saveCSV(){
+  const csv=stockToCSV(stock);
+  localStorage.setItem(LS_STOCK,csv);
+  const fn='stock_renault_'+today()+'.csv';
+  dl(fn,'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv));
+  const m=getMeta();m.fn=fn;m.saved=new Date().toISOString();setMeta(m);
+  document.getElementById('csv-fn').textContent=fn;
+  const d=new Date();document.getElementById('csv-mod').textContent='Sauvegardé le '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  markDirty(false);
+}
+function triggerLoadCSV(){document.getElementById('csv-load-input').click()}
+function loadCSVFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const parsed=csvToStock(ev.target.result);
+      if(!parsed.length)throw new Error('Aucune pièce dans ce CSV');
+      if(!confirm('Charger '+parsed.length+' pièces depuis "'+f.name+'" ?\nLe stock actuel sera remplacé.'))return;
+      stock=parsed;persist();
+      const m=getMeta();m.fn=f.name;m.saved=new Date().toISOString();setMeta(m);
+      document.getElementById('csv-fn').textContent=f.name;
+      renderTable();alert('✓ '+stock.length+' pièces chargées.');
+    }catch(err){alert('Erreur : '+err.message)}
+  };
+  r.readAsText(f,'utf-8');e.target.value='';
+}
+
+function exportHistCSV(){
+  const rows=[['Type','Référence','Désignation','Détail','Date'],
+    ...history.map(h=>{const d=new Date(h.ts);return[h.type,h.ref||'',h.nom,h.detail,d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR')]})];
+  dl('historique_renault_'+today()+'.csv','data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n')));
+}
+
+function statusOf(i){return i.qty===0?'out':i.qty<=i.seuil?'low':'ok'}
+function today(){return new Date().toISOString().slice(0,10)}
+function dl(name,href){const a=document.createElement('a');a.href=href;a.download=name;a.click()}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function updateSBInfo(){
+  document.getElementById('sb-info').textContent=stock.length+' réf.'+(unsaved?' · ● non sauvegardé':'');
+  document.getElementById('cap-info').textContent=stock.length+' / 1000';
+}
+const titles={stock:'Stock',ocr:'Import facture OCR',history:'Historique',settings:'Paramètres'};
+function show(name,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-'+name).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('page-title').textContent=titles[name]||name;
+  if(name==='history')renderHistory();
+  if(name==='settings')updateSBInfo();
+}
+function clearFilters(){document.getElementById('q').value='';document.getElementById('fcat').value='';document.getElementById('fst').value='';renderTable()}
+
+function renderStats(){
+  const tot=stock.length,out=stock.filter(i=>i.qty===0).length,low=stock.filter(i=>i.qty>0&&i.qty<=i.seuil).length,ok=stock.filter(i=>i.qty>i.seuil).length;
+  document.getElementById('stats').innerHTML=`<div class="sc"><div class="sc-lbl">Références</div><div class="sc-val">${tot}</div><div class="sc-sub">/ 1000 max</div></div><div class="sc"><div class="sc-lbl">En stock</div><div class="sc-val" style="color:var(--gtx)">${ok}</div></div><div class="sc sc-warn"><div class="sc-lbl">Stock faible</div><div class="sc-val">${low}</div></div><div class="sc sc-err"><div class="sc-lbl">Rupture</div><div class="sc-val">${out}</div></div>`;
+  const alts=stock.filter(i=>statusOf(i)!=='ok');
+  document.getElementById('alert-zone').innerHTML=alts.length?`<div class="alert-bar">⚠ ${alts.length} pièce(s) à réapprovisionner — <a href="https://rpartstore.renault.com/" target="_blank">Commander sur Rpartstore ↗</a></div>`:'';
+}
+
+function renderTable(){
+  renderStats();
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const cat=document.getElementById('fcat').value;
+  const fst=document.getElementById('fst').value;
+  const fil=stock.map((item,i)=>({...item,_i:i})).filter(item=>(!q||item.ref.toLowerCase().includes(q)||item.nom.toLowerCase().includes(q))&&(!cat||item.cat===cat)&&(!fst||statusOf(item)===fst));
+  const bb={ok:'<span class="badge b-ok">En stock</span>',low:'<span class="badge b-low">Faible</span>',out:'<span class="badge b-out">Rupture</span>'};
+  document.getElementById('tbody').innerHTML=fil.length?fil.map(item=>`<tr><td class="ref-c">${esc(item.ref)}</td><td class="nom-c" title="${esc(item.nom)}">${esc(item.nom)}</td><td style="white-space:nowrap">${esc(item.cat)}</td><td><div class="qc"><button class="qb" onclick="chQty(${item._i},-1)">−</button><span class="qv">${item.qty}</span><button class="qb" onclick="chQty(${item._i},+1)">+</button></div></td><td style="color:var(--muted)">${item.seuil}</td><td style="color:var(--muted);font-size:12px">${item.prix?item.prix.toFixed(2)+' €':'—'}</td><td style="color:var(--faint);font-size:12px">${esc(item.loc)||'—'}</td><td>${bb[statusOf(item)]}</td><td><div class="act"><button class="btn btn-sm btn-ic" onclick="editItem(${item._i})">✏</button><button class="btn btn-sm btn-ic btn-red" onclick="delItem(${item._i})">🗑</button></div></td></tr>`).join(''):'<tr><td colspan="9"><div class="empty"><div class="empty-ico">📦</div>Aucune pièce trouvée</div></td></tr>';
+  document.getElementById('tf').textContent=fil.length+' référence(s) affichée(s) sur '+stock.length;
+  updateSBInfo();
+}
+
+function chQty(idx,delta){const old=stock[idx].qty;stock[idx].qty=Math.max(0,old+delta);addHist(delta>0?'Entrée':'Sortie',stock[idx].ref,stock[idx].nom,(delta>0?'+':'')+delta+' ('+old+'→'+stock[idx].qty+')');persist();renderTable()}
+function delItem(idx){if(!confirm('Supprimer "'+stock[idx].nom+'" ?'))return;addHist('Suppression',stock[idx].ref,stock[idx].nom,'Supprimé');stock.splice(idx,1);persist();renderTable()}
+function editItem(idx){
+  editIdx=idx;const i=stock[idx];
+  document.getElementById('mo-title').textContent='Modifier la pièce';
+  document.getElementById('f-ref').value=i.ref;document.getElementById('f-nom').value=i.nom;
+  document.getElementById('f-cat').value=i.cat;document.getElementById('f-qty').value=i.qty;
+  document.getElementById('f-seuil').value=i.seuil;document.getElementById('f-prix').value=i.prix||'';
+  document.getElementById('f-loc').value=i.loc||'';
+  document.getElementById('mo').classList.add('open');
+}
+function openModal(){
+  editIdx=null;
+  document.getElementById('mo-title').textContent='Ajouter une pièce';
+  ['f-ref','f-nom','f-loc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-qty').value='0';document.getElementById('f-seuil').value='2';document.getElementById('f-prix').value='';
+  document.getElementById('mo').classList.add('open');
+  setTimeout(()=>document.getElementById('f-ref').focus(),60);
+}
+function closeMo(){document.getElementById('mo').classList.remove('open');editIdx=null}
+function closeMoBg(e){if(e.target===document.getElementById('mo'))closeMo()}
+function saveItem(){
+  const ref=document.getElementById('f-ref').value.trim(),nom=document.getElementById('f-nom').value.trim();
+  if(!ref||!nom){alert('Référence et désignation obligatoires.');return}
+  const item={ref,nom,cat:document.getElementById('f-cat').value,qty:parseInt(document.getElementById('f-qty').value)||0,seuil:parseInt(document.getElementById('f-seuil').value)||2,prix:parseFloat(document.getElementById('f-prix').value)||0,loc:document.getElementById('f-loc').value.trim()};
+  if(editIdx!==null){addHist('Modification',item.ref,item.nom,'Modifié');stock[editIdx]=item}
+  else{if(stock.length>=1000){alert('Limite 1000 atteinte.');return}addHist('Ajout',item.ref,item.nom,'Manuel — qty='+item.qty);stock.push(item)}
+  persist();closeMo();renderTable();
+}
+function resetAll(){if(!confirm('Supprimer TOUT ?'))return;stock=[];history=[];persist();persistHist();renderTable()}
+function clearHistory(){if(!confirm('Effacer tout l\'historique ?'))return;history=[];persistHist();renderHistory()}
+
+function renderHistory(){
+  const colors={Entrée:'#3B6D11',Sortie:'#A32D2D',Ajout:'#185FA5',Modification:'#888780',Suppression:'#854F0B','Import OCR':'#7F77DD'};
+  const hl=document.getElementById('hist-list');
+  document.getElementById('hist-count').textContent=history.length+' mouvement(s)';
+  if(!history.length){hl.innerHTML='<div class="empty"><div class="empty-ico">🕐</div>Aucun mouvement</div>';return}
+  hl.innerHTML=history.slice(0,200).map(h=>{const d=new Date(h.ts),ds=d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});return`<div class="hist-row"><div class="hdot" style="background:${colors[h.type]||'#888'}"></div><span class="ht">${h.type}</span><span class="hr">${esc(h.ref||'—')}</span><span class="hn">${esc(h.nom)}</span><span class="hd">${esc(h.detail)}</span><span class="hts">${ds}</span></div>`}).join('');
+}
+
+// ── OCR ──────────────────────────────────────────────────────
+function doDrag(e,on){e.preventDefault();document.getElementById('dz').classList[on?'add':'remove']('drag')}
+function doDrop(e){e.preventDefault();doDrag(e,0);const f=e.dataTransfer.files[0];if(f)processFile(f)}
+function loadOCRFile(e){const f=e.target.files[0];if(f)processFile(f)}
+function processFile(file){
+  const r=new FileReader();
+  r.onload=ev=>{
+    ocrSrc=ev.target.result;
+    document.getElementById('prev-img').src=ocrSrc;
+    document.getElementById('prev-row').style.display='flex';
+    document.getElementById('ocr-fname').textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' Ko)';
+    document.getElementById('prog-lbl').textContent='Prêt — cliquez Analyser';
+    document.getElementById('ocr-result').style.display='none';
+    document.getElementById('raw-det').style.display='none';
+  };
+  r.readAsDataURL(file);
+}
+
+async function runOCR(){
+  if(!ocrSrc){alert('Chargez d\'abord une image.');return}
+  const btn=document.getElementById('ocr-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analyse…';
+  document.getElementById('prog-bar').style.display='block';
+  const fill=document.getElementById('prog-fill'),lbl=document.getElementById('prog-lbl');
+  try{
+    const worker=await Tesseract.createWorker('fra+eng',1,{
+      logger:m=>{if(m.status==='recognizing text'){const p=Math.round(m.progress*100);fill.style.width=p+'%';lbl.textContent='Reconnaissance : '+p+'%'}else lbl.textContent=m.status+'…'}
+    });
+    const {data:{text}}=await worker.recognize(ocrSrc);
+    await worker.terminate();
+    document.getElementById('raw-txt').textContent=text;
+    document.getElementById('raw-det').style.display='block';
+    ocrParsed=parseRenaultInvoice(text);
+    renderOCRItems();
+    lbl.textContent='Terminé ✓ — '+ocrParsed.length+' pièce(s) détectée(s)';
+  }catch(err){lbl.textContent='Erreur : '+err.message}
+  btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Relancer';
+}
+
+// Parseur ciblé facture Renault :
+// Colonnes : Désignation | Référence | Temps/Quantité | Prix Unitaire HT | %R | Prix Net HT | Montant HT | Montant TTC
+function parseRenaultInvoice(text){
+  const results=[];
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>3);
+
+  // Référence Renault : suite de chiffres ≥6, éventuellement avec espaces (ex: 82 01 461 718 ou 8200100)
+  const reRef=/\b(\d[\d ]{4,15}\d)\b/g;
+  // Prix décimal français : chiffres + virgule + 2 chiffres
+  const rePrix=/\b(\d{1,5}[,\.]\d{2})\b/g;
+  // Quantité : entier court isolé (1-3 chiffres)
+  const reQty=/(?:^|\s)(\d{1,3})(?:\s|$)/g;
+
+  const seen=new Set();
+
+  for(let li=0;li<lines.length;li++){
+    const line=lines[li];
+    reRef.lastIndex=0;
+    let rm;
+    while((rm=reRef.exec(line))!==null){
+      const ref=rm[1].replace(/\s+/g,' ').trim();
+      if(ref.length<4||seen.has(ref))continue;
+      seen.add(ref);
+
+      // Désignation = texte à gauche de la référence sur la ligne courante,
+      // sinon la ou les lignes précédentes (cas facture Renault : désignation à gauche, ref à droite)
+      let nom=line.slice(0,rm.index).replace(/[-:·]/g,'').trim();
+      if(nom.length<5){
+        // cherche dans les lignes précédentes proches
+        for(let back=1;back<=3&&li-back>=0;back++){
+          const prev=lines[li-back];
+          // si la ligne précédente ne ressemble pas à un header ou chiffre seul
+          if(prev.length>5&&!/^\s*[\d,\.]+\s*$/.test(prev)&&!/désignation|référence|quantité|montant|page|date|kms/i.test(prev)){
+            nom=prev.slice(0,80).trim();break;
+          }
+        }
+      }
+      if(nom.length<3)nom='Pièce '+ref;
+      nom=nom.slice(0,80);
+
+      // Texte après la référence sur la même ligne : quantité + prix
+      const after=line.slice(rm.index+rm[0].length).trim();
+      // Quantité : premier entier dans le texte après la ref
+      let qty=1;
+      const qm=/^[\s]*(\d{1,3})\b/.exec(after);
+      if(qm)qty=parseInt(qm[1]);
+
+      // Prix : premier montant décimal après la référence (= Prix Unitaire HT dans format Renault)
+      const allP=[];let pm;rePrix.lastIndex=0;
+      while((pm=rePrix.exec(after))!==null)allP.push(parseFloat(pm[1].replace(',','.')));
+      const prix=allP.length?allP[0]:0;
+
+      results.push({ref,nom,qty,prix,cat:guessCategory(nom),seuil:2});
+    }
+  }
+
+  // Fallback : si 0 résultat, essaye de détecter des lignes structurées (texte + espaces + ref + chiffres)
+  if(!results.length){
+    for(const line of lines){
+      const m=/^(.{6,55})\s{2,}(\d[\d ]{3,14}\d)\s+(\d{1,3})\s+([\d,\.]+)/.exec(line);
+      if(m&&!seen.has(m[2].trim())){
+        const ref=m[2].trim();seen.add(ref);
+        results.push({nom:m[1].trim().slice(0,80),ref,qty:parseInt(m[3])||1,prix:parseFloat(m[4].replace(',','.'))||0,cat:guessCategory(m[1]),seuil:2});
+      }
+    }
+  }
+  return results.slice(0,50);
+}
+
+function guessCategory(txt){
+  const t=txt.toLowerCase();
+  if(/frein|plaquette|disque|étrier|mâchoire/.test(t))return 'Freinage';
+  if(/filtre/.test(t))return 'Filtration';
+  if(/bougie|allumage|bobine/.test(t))return 'Allumage';
+  if(/courroie|distribution|tendeur/.test(t))return 'Distribution';
+  if(/pneu|pneum/.test(t))return 'Pneumatiques';
+  if(/pare.choc|capot|aile|vitre|rétro/.test(t))return 'Carrosserie';
+  return 'Autre';
+}
+
+function renderOCRItems(){
+  const res=document.getElementById('ocr-result');
+  if(!ocrParsed.length){
+    res.style.display='block';
+    document.getElementById('ocr-rh').innerHTML='<span style="color:var(--atx)">⚠ Aucune référence détectée. Vérifiez la qualité photo ou ajoutez manuellement.</span>';
+    document.getElementById('ocr-list').innerHTML='';return;
+  }
+  res.style.display='block';
+  document.getElementById('ocr-rh').textContent='✓ '+ocrParsed.length+' pièce(s) détectée(s) — corrigez si besoin puis importez';
+  document.getElementById('ocr-list').innerHTML=ocrParsed.map((item,i)=>`
+    <div class="ocr-row">
+      <div><label>Référence</label><input type="text" value="${esc(item.ref)}" onchange="ocrParsed[${i}].ref=this.value"></div>
+      <div><label>Désignation</label><input type="text" value="${esc(item.nom)}" onchange="ocrParsed[${i}].nom=this.value"></div>
+      <div><label>Quantité</label><input type="number" value="${item.qty}" min="0" onchange="ocrParsed[${i}].qty=parseInt(this.value)||0"></div>
+      <div><label>Catégorie</label><select onchange="ocrParsed[${i}].cat=this.value">${CATS.map(c=>`<option${c===item.cat?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>&nbsp;</label><button class="btn btn-sm btn-red" onclick="rmOCR(${i})">✕</button></div>
+    </div>`).join('');
+}
+
+function rmOCR(i){ocrParsed.splice(i,1);if(!ocrParsed.length)document.getElementById('ocr-result').style.display='none';else renderOCRItems()}
+
+function importOCR(){
+  let added=0,updated=0;
+  ocrParsed.forEach(item=>{
+    const ref=(item.ref||'').trim();
+    const ex=stock.findIndex(s=>s.ref.trim()===ref&&ref!=='');
+    if(ex>=0){const old=stock[ex].qty;stock[ex].qty+=item.qty;addHist('Import OCR',stock[ex].ref,stock[ex].nom,'+'+item.qty+' ('+old+'→'+stock[ex].qty+')');updated++}
+    else{if(stock.length>=1000)return;const ni={ref,nom:item.nom||'Pièce importée',cat:item.cat||'Autre',qty:item.qty||0,seuil:2,prix:item.prix||0,loc:''};stock.push(ni);addHist('Import OCR',ni.ref,ni.nom,'Ajout — qty='+ni.qty);added++}
+  });
+  persist();alert('✓ '+added+' ajoutée(s), '+updated+' mise(s) à jour.');
+  resetOCR();show('stock',document.querySelector('.ni'));renderTable();
+}
+
+function resetOCR(){
+  ocrParsed=[];ocrSrc=null;
+  document.getElementById('prev-row').style.display='none';
+  document.getElementById('ocr-result').style.display='none';
+  document.getElementById('raw-det').style.display='none';
+  document.getElementById('prog-bar').style.display='none';
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('prog-lbl').textContent='';
+  document.getElementById('ocr-btn').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Analyser la facture';
+  document.getElementById('fi').value='';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeMo();
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveCSV()}
+  if((e.ctrlKey||e.metaKey)&&e.key==='f'){e.preventDefault();document.getElementById('q').focus()}
+});
+
+// INIT
+const m=getMeta();
+if(m.fn)document.getElementById('csv-fn').textContent=m.fn;
+if(m.saved){const d=new Date(m.saved);document.getElementById('csv-mod').textContent='Sauvegardé le '+d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+markDirty(false);
+renderTable();
+</script>
+</body>
+</html>
