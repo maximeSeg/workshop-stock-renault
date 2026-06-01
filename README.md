@@ -28,11 +28,6 @@ pour le Garage Léon Olivier (Renault agréé, Saint-Ouen 93).
 Ouvrir `src/gestion_stock_renault_v3.html` dans Chrome ou Firefox.
 Aucune installation requise.
 
-## Client
-
-Garage Léon Olivier — 100-106 rue du Landy, 93400 Saint-Ouen
-Contact : garage.leon-olivier@wanadoo.fr
-
 ## Liens
 
 - Portail commandes Renault : https://rpartstore.renault.com/
